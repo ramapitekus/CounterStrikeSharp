@@ -7,7 +7,6 @@
 #undef private
 
 #include <thread>
-
 #include "ISmmAPI.h"
 #include "eiface.h"
 #include "iserver.h"
@@ -59,33 +58,33 @@ class CGameConfig;
 
 namespace globals {
 
-extern IVEngineServer *engine;
-extern IGameEventManager2 *gameEventManager;
-extern IPlayerInfoManager *playerinfoManager;
-extern IBotManager *botManager;
-extern IServerPluginHelpers *helpers;
-extern IUniformRandomStream *randomStream;
-extern IEngineTrace *engineTrace;
-extern IEngineSound *engineSound;
-extern IEngineServiceMgr *engineServiceManager;
-extern INetworkStringTableContainer *netStringTables;
-extern CGlobalVars *globalVars;
-extern IFileSystem *fileSystem;
-extern IServerGameDLL *serverGameDll;
-extern IServerGameClients *serverGameClients;
-extern INetworkServerService *networkServerService;
-extern IServerTools *serverTools;
-extern IPhysics *physics;
-extern IPhysicsCollision *physicsCollision;
-extern IPhysicsSurfaceProps *physicsSurfaceProps;
-extern IMDLCache *modelCache;
-extern IVoiceServer *voiceServer;
+extern IVEngineServer* engine;
+extern IGameEventManager2* gameEventManager;
+extern IPlayerInfoManager* playerinfoManager;
+extern IBotManager* botManager;
+extern IServerPluginHelpers* helpers;
+extern IUniformRandomStream* randomStream;
+extern IEngineTrace* engineTrace;
+extern IEngineSound* engineSound;
+extern IEngineServiceMgr* engineServiceManager;
+extern INetworkStringTableContainer* netStringTables;
+extern CGlobalVars* globalVars;
+extern IFileSystem* fileSystem;
+extern IServerGameDLL* serverGameDll;
+extern IServerGameClients* serverGameClients;
+extern INetworkServerService* networkServerService;
+extern IServerTools* serverTools;
+extern IPhysics* physics;
+extern IPhysicsCollision* physicsCollision;
+extern IPhysicsSurfaceProps* physicsSurfaceProps;
+extern IMDLCache* modelCache;
+extern IVoiceServer* voiceServer;
 extern CDotNetManager dotnetManager;
-extern ICvar *cvars;
-extern ISource2Server *server;
-extern CGlobalEntityList *globalEntityList;
+extern ICvar* cvars;
+extern ISource2Server* server;
+extern CGlobalEntityList* globalEntityList;
 extern EntityListener entityListener;
-extern CGameEntitySystem *entitySystem;
+extern CGameEntitySystem* entitySystem;
 
 extern EventManager eventManager;
 extern UserMessageManager userMessageManager;
@@ -102,17 +101,17 @@ extern ServerManager serverManager;
 extern VoiceManager voiceManager;
 
 extern HookManager hookManager;
-extern SourceHook::ISourceHook *source_hook;
+extern SourceHook::ISourceHook* source_hook;
 extern int source_hook_pluginid;
-extern IGameEventSystem *gameEventSystem;
-extern CounterStrikeSharpMMPlugin *mmPlugin;
-extern ISmmAPI *ismm;
+extern IGameEventSystem* gameEventSystem;
+extern CounterStrikeSharpMMPlugin* mmPlugin;
+extern ISmmAPI* ismm;
 extern CCoreConfig* coreConfig;
 extern CGameConfig* gameConfig;
 
 extern const float engine_fixed_tick_interval;
 
-typedef IGameEventListener2 *GetLegacyGameEventListener_t(CPlayerSlot slot);
+typedef IGameEventListener2* GetLegacyGameEventListener_t(CPlayerSlot slot);
 
 extern bool gameLoopInitialized;
 extern GetLegacyGameEventListener_t* GetLegacyGameEventListener;
@@ -121,20 +120,20 @@ extern std::thread::id gameThreadId;
 void Initialize();
 // Should only be called within the active game loop (i e map should be loaded
 // and active) otherwise that'll be nullptr!
-CGlobalVars *getGlobalVars();
-}  // namespace globals
+CGlobalVars* getGlobalVars();
+} // namespace globals
 
 namespace modules {
 class CModule;
 
-extern CModule *engine;
-extern CModule *tier0;
-extern CModule *server;
-extern CModule *schemasystem;
-extern CModule *vscript;
-}  // namespace modules
+extern CModule* engine;
+extern CModule* tier0;
+extern CModule* server;
+extern CModule* schemasystem;
+extern CModule* vscript;
+} // namespace modules
 
-}  // namespace counterstrikesharp
+} // namespace counterstrikesharp
 
 #undef SH_GLOB_SHPTR
 #define SH_GLOB_SHPTR counterstrikesharp::globals::source_hook

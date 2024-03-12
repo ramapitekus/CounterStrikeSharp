@@ -1,18 +1,18 @@
 /*
-*  This file is part of CounterStrikeSharp.
-*  CounterStrikeSharp is free software: you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation, either version 3 of the License, or
-*  (at your option) any later version.
-*
-*  CounterStrikeSharp is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with CounterStrikeSharp.  If not, see <https://www.gnu.org/licenses/>. *
-*/
+ *  This file is part of CounterStrikeSharp.
+ *  CounterStrikeSharp is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  CounterStrikeSharp is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CounterStrikeSharp.  If not, see <https://www.gnu.org/licenses/>. *
+ */
 
 #include "core/managers/entity_manager.h"
 #include "core/gameconfig.h"
@@ -25,6 +25,8 @@
 #include "scripting/callback_manager.h"
 
 namespace counterstrikesharp {
+
+SH_DECL_MANUALHOOK2_void(SetTrafnsmit, 0, 0, 0, CCheckTransmitInfo*, bool);
 
 EntityManager::EntityManager() {}
 
@@ -42,7 +44,8 @@ void EntityManager::OnAllInitialized()
         globals::gameConfig->GetSignature("CEntityIOOutput_FireOutputInternal")));
 
     if (m_pFireOutputInternal == nullptr) {
-        CSSHARP_CORE_CRITICAL("Failed to find signature for \'CEntityIOOutput_FireOutputInternal\'");
+        CSSHARP_CORE_CRITICAL(
+            "Failed to find signature for \'CEntityIOOutput_FireOutputInternal\'");
         return;
     }
 
@@ -72,9 +75,19 @@ void CEntityListener::OnEntitySpawned(CEntityInstance* pEntity)
         callback->Execute();
     }
 }
+
+void CEntityListener::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool b)
+{
+    RETURN_META(MRES_HANDLED);
+};
 void CEntityListener::OnEntityCreated(CEntityInstance* pEntity)
 {
     auto callback = globals::entityManager.on_entity_created_callback;
+    auto pEnt = globals::entitySystem->GetBaseEntity(pEntity->GetEntityIndex());
+    int offset = counterstrikesharp::globals::gameConfig->GetOffset("SetTransmit");
+    SH_MANUALHOOK_RECONFIGURE(SetTrafnsmit, offset, 0, 0);
+    SH_ADD_MANUALVPHOOK(SetTrafnsmit, pEnt, SH_MEMBER(this, &CEntityListener::Hook_SetTransmit),
+                        false);
 
     if (callback && callback->GetFunctionCount()) {
         callback->ScriptContext().Reset();
@@ -143,8 +156,7 @@ void EntityManager::UnhookEntityOutput(const char* szClassname, const char* szOu
 void DetourFireOutputInternal(CEntityIOOutput* const pThis, CEntityInstance* pActivator,
                               CEntityInstance* pCaller, const CVariant* const value, float flDelay)
 {
-    std::vector vecSearchKeys{OutputKey_t("*", pThis->m_pDesc->m_pName),
-        OutputKey_t("*", "*")};
+    std::vector vecSearchKeys{OutputKey_t("*", pThis->m_pDesc->m_pName), OutputKey_t("*", "*")};
 
     if (pCaller) {
         vecSearchKeys.push_back(OutputKey_t(pCaller->GetClassname(), pThis->m_pDesc->m_pName));

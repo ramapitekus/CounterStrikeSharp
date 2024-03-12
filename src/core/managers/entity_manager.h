@@ -1,18 +1,18 @@
 /*
-*  This file is part of CounterStrikeSharp.
-*  CounterStrikeSharp is free software: you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation, either version 3 of the License, or
-*  (at your option) any later version.
-*
-*  CounterStrikeSharp is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with CounterStrikeSharp.  If not, see <https://www.gnu.org/licenses/>. *
-*/
+ *  This file is part of CounterStrikeSharp.
+ *  CounterStrikeSharp is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  CounterStrikeSharp is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CounterStrikeSharp.  If not, see <https://www.gnu.org/licenses/>. *
+ */
 
 #pragma once
 
@@ -32,31 +32,37 @@ class ScriptCallback;
 
 typedef std::pair<std::string, std::string> OutputKey_t;
 
-class CEntityListener : public IEntityListener {
-    void OnEntitySpawned(CEntityInstance *pEntity) override;
-    void OnEntityCreated(CEntityInstance *pEntity) override;
-    void OnEntityDeleted(CEntityInstance *pEntity) override;
-    void OnEntityParentChanged(CEntityInstance *pEntity, CEntityInstance *pNewParent) override;
+class CEntityListener : public IEntityListener
+{
+    void OnEntitySpawned(CEntityInstance* pEntity) override;
+    void OnEntityCreated(CEntityInstance* pEntity) override;
+    void OnEntityDeleted(CEntityInstance* pEntity) override;
+    void OnEntityParentChanged(CEntityInstance* pEntity, CEntityInstance* pNewParent) override;
+    void Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool b);
 };
 
-class EntityManager : public GlobalClass {
+class EntityManager : public GlobalClass
+{
     friend CEntityListener;
-public:
+
+  public:
     EntityManager();
     ~EntityManager();
     void OnAllInitialized() override;
     void OnShutdown() override;
-    void HookEntityOutput(const char* szClassname, const char* szOutput, CallbackT fnCallback, HookMode mode);
-    void UnhookEntityOutput(const char* szClassname, const char* szOutput, CallbackT fnCallback, HookMode mode);
+    void HookEntityOutput(const char* szClassname, const char* szOutput, CallbackT fnCallback,
+                          HookMode mode);
+    void UnhookEntityOutput(const char* szClassname, const char* szOutput, CallbackT fnCallback,
+                            HookMode mode);
     CEntityListener entityListener;
     std::map<OutputKey_t, CallbackPair*> m_pHookMap;
-private:
-    ScriptCallback *on_entity_spawned_callback;
-    ScriptCallback *on_entity_created_callback;
-    ScriptCallback *on_entity_deleted_callback;
-    ScriptCallback *on_entity_parent_changed_callback;
-};
 
+  private:
+    ScriptCallback* on_entity_spawned_callback;
+    ScriptCallback* on_entity_created_callback;
+    ScriptCallback* on_entity_deleted_callback;
+    ScriptCallback* on_entity_parent_changed_callback;
+};
 
 enum EntityIOTargetType_t
 {
@@ -107,8 +113,9 @@ typedef void (*FireOutputInternal)(CEntityIOOutput* const, CEntityInstance*, CEn
                                    const CVariant* const, float);
 
 static void DetourFireOutputInternal(CEntityIOOutput* const pThis, CEntityInstance* pActivator,
-                                     CEntityInstance* pCaller, const CVariant* const value, float flDelay);
+                                     CEntityInstance* pCaller, const CVariant* const value,
+                                     float flDelay);
 
 static FireOutputInternal m_pFireOutputInternal = nullptr;
 
-}  // namespace counterstrikesharp
+} // namespace counterstrikesharp

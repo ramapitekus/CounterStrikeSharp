@@ -20,23 +20,30 @@
 
 #include <funchook.h>
 #include <vector>
+#include <iterator>
 
+#include "core/managers/entity_manager.h"
+
+#include "public/playerslot.h"
 #include <public/eiface.h>
 #include "scripting/callback_manager.h"
 
+SH_DECL_HOOK6_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, false, CCheckTransmitInfo**,
+                   int, CBitVec<16384>&, const Entity2Networkable_t**, const uint16*, int);
+
 namespace counterstrikesharp {
-
-SH_DECL_MANUALHOOK2_void(SetTrafnsmit, 0, 0, 0, CCheckTransmitInfo*, bool);
-
 EntityManager::EntityManager() {}
 
 EntityManager::~EntityManager() {}
 
 void EntityManager::OnAllInitialized()
 {
+    SH_ADD_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities,
+                SH_MEMBER(this, &EntityManager::OnEntityCheckTransmit), true);
     on_entity_spawned_callback = globals::callbackManager.CreateCallback("OnEntitySpawned");
     on_entity_created_callback = globals::callbackManager.CreateCallback("OnEntityCreated");
     on_entity_deleted_callback = globals::callbackManager.CreateCallback("OnEntityDeleted");
+    on_entity_check_transmit = globals::callbackManager.CreateCallback("OnEntityCheckTransmit");
     on_entity_parent_changed_callback =
         globals::callbackManager.CreateCallback("OnEntityParentChanged");
 
@@ -58,11 +65,14 @@ void EntityManager::OnAllInitialized()
 
 void EntityManager::OnShutdown()
 {
+    SH_REMOVE_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities,
+                   SH_MEMBER(this, &EntityManager::OnEntityCheckTransmit), true);
     globals::callbackManager.ReleaseCallback(on_entity_spawned_callback);
     globals::callbackManager.ReleaseCallback(on_entity_created_callback);
     globals::callbackManager.ReleaseCallback(on_entity_deleted_callback);
     globals::callbackManager.ReleaseCallback(on_entity_parent_changed_callback);
     globals::entitySystem->RemoveListenerEntity(&entityListener);
+    globals::callbackManager.ReleaseCallback(on_entity_check_transmit);
 }
 
 void CEntityListener::OnEntitySpawned(CEntityInstance* pEntity)
@@ -76,6 +86,64 @@ void CEntityListener::OnEntitySpawned(CEntityInstance* pEntity)
     }
 }
 
+void EntityManager::OnEntityCheckTransmit(CCheckTransmitInfo** pInfo, int infoCount,
+                                          CBitVec<16384>&,
+                                          const Entity2Networkable_t** pNetworkables,
+                                          const uint16* pEntityIndicies, int nEntities)
+{
+    CCheckTransmitInfo* pInfoo = *pInfo;
+    CBitVec<16384> ffs = *pInfoo->m_pTransmitEntity;
+    for (int i = 0; i < nEntities; ++i) {
+        // GetEntityIdentity
+        CEntityIdentity* identity =
+            globals::entitySystem->GetEntityIdentity((CEntityIndex)pEntityIndicies[i]);
+        // return m_pGameInfo->GetEntityInfo(pEntityIndicies[i])->flags;
+        // int client = pEntityIndicies[i].Get();
+        // CPlayer* pPlayer = &m_players[client];
+        // auto baseEntity = globals::entitySystem->GetBaseEntity(pEntityIndicies[i]);
+        std::cout << "Class name of the entity: " << identity->GetClassname() << std::endl;
+
+        // Now 'entity' points to the entity data, which might allow you to access its name or other
+        // properties
+    }
+    // auto callback = globals::entityManager.on_entity_check_transmit;
+    // if (pInfo == nullptr) {
+    //     std::cout << "CCheckTransmitInfo array pointer is null." << std::endl;
+    //     return;
+    // }
+
+    // TransmitInfo* pTransmitInfo = reinterpret_cast<TransmitInfo*>(pInfo[i]);
+    // CPlayerSlot playerId = pTransmitInfo->m_nClientEntityIndex.Get();
+    // std::cout << "Transmit to playerindex: " << std::endl;
+    int sum = 0;
+    bool flag = false;
+
+    // for (int i = 0; i < 16384; ++i) {
+    //     bool isSet = ffs.IsBitSet(i);
+    //     if (isSet == true) {
+    //         std::cout << "This bit is set and it's " << i << " in sequence." << std::endl;
+    //     }
+
+    //     if (ffs[i].isSet()) {
+    //         flag = true;
+    //         sum += 1;
+    //     }
+    //     if (flag == true) {
+    //         std::cout << "value for this bit is" << ffs[i] << "  " << i << "th in sequence"
+    //                   << std::endl;
+    //         if (ffs[i] == 0) {
+    //             flag = false;
+    //         }
+    //     }
+    // }
+    // std::cout << "In total " << sum << "set to transmission in this iteration, infocount is "
+    //           << infoCount << std::endl;
+    // for (int i = 0; i < 10; ++i) {
+    //     std::cout << "Info for CCheckTransmitInfo object " << i << ":" << std::endl;
+    //     *pInfo[i];
+    // }
+};
+
 void CEntityListener::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool b)
 {
     RETURN_META(MRES_HANDLED);
@@ -83,11 +151,10 @@ void CEntityListener::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool b)
 void CEntityListener::OnEntityCreated(CEntityInstance* pEntity)
 {
     auto callback = globals::entityManager.on_entity_created_callback;
+
     auto pEnt = globals::entitySystem->GetBaseEntity(pEntity->GetEntityIndex());
-    int offset = counterstrikesharp::globals::gameConfig->GetOffset("SetTransmit");
-    SH_MANUALHOOK_RECONFIGURE(SetTrafnsmit, offset, 0, 0);
-    SH_ADD_MANUALVPHOOK(SetTrafnsmit, pEnt, SH_MEMBER(this, &CEntityListener::Hook_SetTransmit),
-                        false);
+    int offset = 0;
+    offset = counterstrikesharp::globals::gameConfig->GetOffset("SetTransmit");
 
     if (callback && callback->GetFunctionCount()) {
         callback->ScriptContext().Reset();
